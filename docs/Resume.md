@@ -1,6 +1,6 @@
 # Sree Charan Reddy Kailasam
 
-![Headshot](./assets/images/headshot.jpg)
+![Headshot](./assets/PHOTO_CHARAN.jpg)
 
 ---
 
