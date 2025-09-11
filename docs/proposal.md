@@ -15,26 +15,27 @@
 
 # 2. Background  
 
-E-commerce has transformed global supply chains, but late deliveries remain a critical challenge. Customers expect fast and reliable service, and any delay leads to reduced trust, poor reviews, and financial losses for sellers.  
+Late deliveries are one of the most significant challenges in modern supply chains. Customers expect accurate and timely delivery, but delays result in lower satisfaction, negative reviews, and increased costs for sellers.  
 
-The COVID-19 pandemic further highlighted how fragile supply chains can be when demand spikes or when logistics face disruption. To address this, companies are turning to **predictive analytics** to anticipate and prevent delays before they occur.  
+The COVID-19 pandemic amplified these issues, making predictive analytics for logistics resilience more important than ever.  
 
-This project will use data from the **Olist Brazilian E-Commerce dataset** to build machine learning models that predict whether an order will be delivered on time or late, and if delayed, by how many days.  
+**Project Objective:**  
+This project aims to build machine learning models that predict whether an e-commerce order will be delivered on time or late, and if delayed, estimate the number of days late.  
 
-Although the dataset does not include explicit reasons for delay, this project will **infer the main drivers of delays** through feature analysis. Factors such as **shipping distance, product type, freight cost, and seller region** are expected to play a key role.  
-
-**Why this matters:**  
-- For companies → reduces operational costs and improves customer satisfaction.  
-- For customers → builds trust with accurate delivery expectations.  
-- For supply chain managers → provides data-driven insights for better decision-making.  
+**Why it Matters:**  
+Accurate delivery predictions help:  
+- **E-commerce platforms** improve trust and customer satisfaction.  
+- **Logistics providers** allocate resources effectively and reduce risk.  
+- **Sellers** optimize shipping methods and inventory buffers.  
+- **Customers** receive realistic delivery expectations and timely updates.  
 
 **Research Questions:**  
-1. Can machine learning models predict whether an e-commerce order will be delivered late?  
-2. Which features (e.g., shipping distance, freight value, seller location, product type) are the strongest predictors of delivery delays?  
-3. How strongly do delivery delays correlate with customer satisfaction scores?  
-4. If an order is predicted to be delayed, by how many days will it be late?  
-5. What inferred insights can be drawn about the *reasons* for delay, even though they are not explicitly provided in the dataset?  
-6. What actionable recommendations can be made to improve logistics performance?  
+1. Can we predict whether an order will be delivered late?  
+2. How many days late will delayed orders be?  
+3. Which factors (distance, freight cost, product type, seller location) are most predictive of delays?  
+4. How do delays correlate with customer satisfaction scores?  
+5. What inferred insights can be drawn about the *reasons* for delay, even though not explicitly stated in the dataset?  
+6. What recommendations can be made to improve supply chain performance?  
 
 ---
 
@@ -44,73 +45,78 @@ Although the dataset does not include explicit reasons for delay, this project w
 - **Olist Brazilian E-Commerce Dataset (Kaggle)**  
   [Link to dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)  
   - Public dataset with ~100,000 customer orders.  
-  - Contains multiple tables: orders, order items, products, customers, sellers, payments, reviews, and geolocation.  
-  - After merging these tables, one enriched dataset will be created where each row represents a single customer order.  
+  - Includes multiple tables: orders, order items, customers, sellers, products, and geolocation.  
+  - Merged into a single dataset of **112,650 rows × 19 columns** for this project.  
 
 ---
 
-###  Data Size & Shape  
-- Orders: ~100,000 rows × 8 columns  
-- Order items: ~110,000 rows × 9 columns  
-- Customers: ~100,000 rows × 5 columns  
-- Sellers: ~3,000 rows × 4 columns  
-- Reviews: ~100,000 rows × 4 columns  
-- Final merged dataset: ~100K rows (each row = one order, enriched with product, seller, customer, and review details).  
+### Data Overview  
+- **Size:** ~112,650 rows × 19 columns  
+- **Scope:** Brazilian e-commerce transactions across multiple categories and states  
+- **Time Period:** 2016–2018  
+- **Unit of Analysis:** One order = one row  
 
 ---
 
-### Time Period  
-- Covers **2016 to 2018** (based on Olist transaction records).  
+### What Was Done to Prepare the Final Dataset  
+1. **Merged key tables**: orders, order items, customers, sellers, products, and geolocation.  
+2. **Selected key variables**: delivery dates, freight value, product features, seller & customer locations.  
+3. **Engineered targets**:  
+   - `delivery_delay` (0 = on time, 1 = late)  
+   - `delay_days` (days late/early).  
+4. **Removed identifiers** (`order_id`, `customer_id`, `product_id`, `seller_id`) to prevent data leakage.  
+5. **Prepared location coordinates** (lat/lng) for feature engineering (distance calculation).  
 
 ---
 
-### What Each Row Represents  
-- One customer order placed on the Olist platform.  
-- Includes order details, delivery dates, seller and customer information, product category, and customer review.  
+### Column Data Types and Dictionary (Final Dataset)  
 
----
-
-### Data Dictionary (Key Variables for ML)  
-
-| Column | Type | Description | Example |  
-|--------|------|-------------|---------|  
-| order_id | String | Unique identifier for an order | `df128bcd9` |  
-| order_purchase_timestamp | DateTime | Date and time the order was placed | `2017-03-10 13:57:00` |  
-| order_estimated_delivery_date | Date | Estimated delivery date given to the customer | `2017-03-12` |  
-| order_delivered_customer_date | Date | Actual delivery date | `2017-03-15` |  
-| delivery_delay (derived) | Binary (Target 1) | 1 = Late, 0 = On-time | `1` |  
-| delay_days (derived) | Numeric (Target 2) | Number of days late (negative if early) | `+3` |  
-| product_category | Categorical | Type of product purchased | `electronics` |  
-| freight_value | Numeric | Shipping cost | `25.30` |  
-| seller_state | Categorical | State of the seller (origin) | `SP` |  
-| customer_state | Categorical | State of the customer (destination) | `RJ` |  
-| distance_km (derived) | Numeric | Distance between seller and customer (using geolocation) | `280.5` |  
-| review_score | Numeric (1–5) | Customer satisfaction rating | `3` |  
+| Column | Type | Definition | Example |  
+|--------|------|------------|---------|  
+| order_purchase_timestamp | DateTime | Date and time the order was placed | 2017-03-10 13:57:00 |  
+| order_estimated_delivery_date | Date | Estimated delivery date | 2017-03-12 |  
+| order_delivered_customer_date | Date | Actual delivery date (used to derive target) | 2017-03-15 |  
+| delivery_delay | Binary | Target 1: 0 = On-time, 1 = Delayed | 1 |  
+| delay_days | Integer | Target 2: Days late (+) or early (-) | +3 |  
+| product_category_name | Categorical | Type of product | electronics |  
+| product_weight_g | Float | Product weight in grams | 500 |  
+| product_length_cm | Float | Product length in cm | 19 |  
+| product_height_cm | Float | Product height in cm | 8 |  
+| product_width_cm | Float | Product width in cm | 13 |  
+| freight_value | Float | Shipping cost | 25.30 |  
+| seller_state | Categorical | Origin state of seller | SP |  
+| customer_state | Categorical | Destination state of customer | RJ |  
+| customer_lat, customer_lng | Float | Customer coordinates | -23.57, -46.58 |  
+| seller_lat, seller_lng | Float | Seller coordinates | -23.68, -46.44 |  
 
 ---
 
 ### Target Variables  
 1. **delivery_delay** → Binary classification:  
-   - `0 = On-time`  
-   - `1 = Delayed`  
+   - 0 = On-time  
+   - 1 = Delayed  
 
 2. **delay_days** → Regression:  
-   - Numeric prediction of how many days late (positive) or early (negative) an order is delivered.  
+   - Numeric prediction of how many days late/early.  
 
 ---
 
-### Predictor Variables  
-- **Order features:** purchase timestamp, weekday, month.  
-- **Product features:** category, weight/dimensions (from product table).  
-- **Logistics features:** seller state, customer state, freight value, seller–customer distance.  
-- **Customer features:** review score (for correlation analysis).  
+### Feature Candidates  
+- **Order features:** purchase date (day, month, weekday), estimated lead time.  
+- **Product features:** category, weight, dimensions.  
+- **Logistics features:** freight value, seller state, customer state.  
+- **Geospatial features:** seller–customer distance (to be derived).  
 
 ---
 
 # Two-Step Design  
 
-This project will adopt a **two-step machine learning design**:  
-1. **Classification Model** → Predict whether an order will be delivered on time or late (Yes/No).  
-2. **Regression Model** → For orders predicted as delayed, estimate the number of days late.  
+This project adopts a **two-step design**:  
+1. **Classification model** → Predict if an order will be late (Yes/No).  
+2. **Regression model** → For delayed orders, predict the number of days late.  
+
+This approach provides both:  
+- A quick **risk flag** (for immediate alerts).  
+- A **numeric estimate** (for operational planning).  
 
 ---
