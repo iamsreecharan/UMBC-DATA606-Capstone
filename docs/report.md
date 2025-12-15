@@ -6,6 +6,7 @@
 **Prepared for:** UMBC Data Science Master’s Capstone by Dr. Chaojie (Jay) Wang  
 
 **Author:** Sree Charan Reddy Kailasam  
+**Semester:** Fall 2025
 
 Links (update before submission):  
 - **GitHub Repository:** https://github.com/iamsreecharan  
